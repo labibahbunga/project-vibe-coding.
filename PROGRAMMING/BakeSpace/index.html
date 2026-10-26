@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BakeSpace — Baking Planner</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Tailwind config for bakery palette -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:    { DEFAULT: '#FDF6EC', dark: '#F5E6CE' },
+            blush:    { DEFAULT: '#F9C5C5', dark: '#F4A4A4', light: '#FDE8E8' },
+            brown:    { DEFAULT: '#C8956C', dark: '#A0714F', light: '#E8C9A8' },
+            chocolate:{ DEFAULT: '#6B3F2A', dark: '#4A2518' },
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="bg-cream font-sans text-chocolate-dark min-h-screen">
+
+  <!-- ===== SIDEBAR NAVIGATION ===== -->
+  <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-30 flex flex-col">
+    <!-- Brand -->
+    <div class="p-6 border-b border-cream-dark">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🎂</span>
+        <div>
+          <h1 class="font-display text-xl text-chocolate-dark leading-tight">BakeSpace</h1>
+          <p class="text-xs text-brown">Baking Planner</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav Links -->
+    <nav class="flex-1 p-4 space-y-1">
+      <a href="#" class="nav-link active" data-page="dashboard">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+      <a href="#" class="nav-link" data-page="recipes">
+        <span class="nav-icon">📖</span> My Recipes
+      </a>
+      <a href="#" class="nav-link" data-page="schedule">
+        <span class="nav-icon">📅</span> Baking Schedule
+      </a>
+      <a href="#" class="nav-link" data-page="ingredients">
+        <span class="nav-icon">🛒</span> Ingredients
+      </a>
+    </nav>
+
+    <!-- Footer -->
+    <div class="p-4 text-xs text-brown border-t border-cream-dark text-center">
+      BakeSpace © 2025
+    </div>
+  </aside>
+
+  <!-- Mobile Top Bar -->
+  <header class="mobile-header fixed top-0 left-0 right-0 h-14 bg-white shadow-sm z-20 flex items-center justify-between px-4 hidden">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">🎂</span>
+      <span class="font-display text-lg text-chocolate-dark">BakeSpace</span>
+    </div>
+    <button id="menuBtn" class="text-2xl text-brown p-1">☰</button>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div id="mobileOverlay" class="fixed inset-0 bg-black/40 z-20 hidden" onclick="closeMobileMenu()"></div>
+
+  <!-- ===== MAIN CONTENT AREA ===== -->
+  <main id="main" class="ml-64 min-h-screen transition-all">
+
+    <!-- ========== PAGE: DASHBOARD ========== -->
+    <section id="page-dashboard" class="page-section p-6 lg:p-8">
+      <div class="mb-8">
+        <h2 class="font-display text-3xl text-chocolate-dark">Good day, Baker! 👋</h2>
+        <p class="text-brown mt-1">Here's your baking overview</p>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-cream-dark">
+          <div class="text-3xl mb-2">📖</div>
+          <div id="statRecipes" class="text-3xl font-bold text-chocolate-dark">0</div>
+          <div class="text-sm text-brown mt-1">Total Resep</div>
+        </div>
+        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-cream-dark">
+          <div class="text-3xl mb-2">📅</div>
+          <div id="statSchedules" class="text-3xl font-bold text-chocolate-dark">0</div>
+          <div class="text-sm text-brown mt-1">Jadwal Mendatang</div>
+        </div>
+        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-cream-dark">
+          <div class="text-3xl mb-2">✅</div>
+          <div id="statDone" class="text-3xl font-bold text-chocolate-dark">0</div>
+          <div class="text-sm text-brown mt-1">Selesai Dibuat</div>
+        </div>
+        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-cream-dark">
+          <div class="text-3xl mb-2">🛒</div>
+          <div id="statIngredients" class="text-3xl font-bold text-chocolate-dark">0</div>
+          <div class="text-sm text-brown mt-1">Bahan Tersedia</div>
+        </div>
+      </div>
+
+      <!-- Upcoming Schedule & Recent Recipes -->
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Upcoming Baking -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-cream-dark">
+          <h3 class="font-display text-lg text-chocolate-dark mb-4">⏰ Jadwal Mendatang</h3>
+          <div id="dashUpcoming" class="space-y-3">
+            <p class="text-brown text-sm text-center py-4">Belum ada jadwal</p>
+          </div>
+          <button onclick="navigateTo('schedule')" class="btn-outline w-full mt-4 text-sm">Lihat Semua Jadwal</button>
+        </div>
+
+        <!-- Recent Recipes -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-cream-dark">
+          <h3 class="font-display text-lg text-chocolate-dark mb-4">📖 Resep Terbaru</h3>
+          <div id="dashRecipes" class="space-y-3">
+            <p class="text-brown text-sm text-center py-4">Belum ada resep</p>
+          </div>
+          <button onclick="navigateTo('recipes')" class="btn-outline w-full mt-4 text-sm">Lihat Semua Resep</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: MY RECIPES ========== -->
+    <section id="page-recipes" class="page-section p-6 lg:p-8 hidden">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="font-display text-3xl text-chocolate-dark">My Recipes</h2>
+          <p class="text-brown mt-1">Kelola koleksi resep kue Anda</p>
+        </div>
+        <button onclick="openRecipeModal()" class="btn-primary">
+          + Tambah Resep
+        </button>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="flex flex-wrap gap-3 mb-6">
+        <div class="relative flex-1 min-w-48">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brown">🔍</span>
+          <input id="searchInput" type="text" placeholder="Cari resep..." class="input-field pl-9 w-full" oninput="renderRecipes()" />
+        </div>
+        <select id="filterCategory" class="input-field min-w-36" onchange="renderRecipes()">
+          <option value="">Semua Kategori</option>
+          <option value="Kue Kering">Kue Kering</option>
+          <option value="Kue Basah">Kue Basah</option>
+          <option value="Roti">Roti</option>
+          <option value="Cake">Cake</option>
+          <option value="Pastry">Pastry</option>
+          <option value="Dessert">Dessert</option>
+        </select>
+      </div>
+
+      <!-- Recipe Grid -->
+      <div id="recipeGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Cards rendered by JS -->
+      </div>
+      <div id="noRecipes" class="hidden text-center py-16">
+        <div class="text-6xl mb-4">🍰</div>
+        <p class="text-brown text-lg">Belum ada resep ditemukan</p>
+        <p class="text-brown/60 text-sm mt-1">Coba ubah filter atau tambah resep baru</p>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: BAKING SCHEDULE ========== -->
+    <section id="page-schedule" class="page-section p-6 lg:p-8 hidden">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="font-display text-3xl text-chocolate-dark">Baking Schedule</h2>
+          <p class="text-brown mt-1">Atur jadwal kegiatan baking Anda</p>
+        </div>
+        <button onclick="openScheduleModal()" class="btn-primary">+ Tambah Jadwal</button>
+      </div>
+
+      <!-- Schedule Filter Tabs -->
+      <div class="flex gap-2 mb-5 flex-wrap">
+        <button class="filter-tab active" data-filter="all" onclick="filterSchedule(this, 'all')">Semua</button>
+        <button class="filter-tab" data-filter="upcoming" onclick="filterSchedule(this, 'upcoming')">Mendatang</button>
+        <button class="filter-tab" data-filter="inprogress" onclick="filterSchedule(this, 'inprogress')">Berlangsung</button>
+        <button class="filter-tab" data-filter="done" onclick="filterSchedule(this, 'done')">Selesai</button>
+      </div>
+
+      <div id="scheduleList" class="space-y-4">
+        <!-- Schedule items rendered by JS -->
+      </div>
+      <div id="noSchedule" class="hidden text-center py-16">
+        <div class="text-6xl mb-4">📅</div>
+        <p class="text-brown text-lg">Belum ada jadwal baking</p>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: INGREDIENTS ========== -->
+    <section id="page-ingredients" class="page-section p-6 lg:p-8 hidden">
+      <div class="mb-6">
+        <h2 class="font-display text-3xl text-chocolate-dark">Ingredient Checklist</h2>
+        <p class="text-brown mt-1">Tandai bahan yang sudah tersedia</p>
+      </div>
+
+      <!-- Recipe Selector -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-cream-dark mb-6">
+        <label class="block text-sm font-semibold text-chocolate-dark mb-2">Pilih Resep</label>
+        <select id="ingredientRecipeSelect" class="input-field w-full" onchange="renderChecklist()">
+          <option value="">— Pilih resep —</option>
+        </select>
+      </div>
+
+      <!-- Checklist Area -->
+      <div id="checklistArea" class="hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h3 id="checklistTitle" class="font-display text-lg text-chocolate-dark"></h3>
+          <div class="flex gap-2">
+            <button onclick="checkAll(true)" class="btn-outline text-sm">✅ Tandai Semua</button>
+            <button onclick="checkAll(false)" class="btn-outline text-sm">↩ Reset</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-cream-dark mb-4">
+          <div class="w-full bg-cream-dark rounded-full h-2 mb-3">
+            <div id="progressBar" class="bg-brown rounded-full h-2 transition-all duration-300" style="width:0%"></div>
+          </div>
+          <p id="progressText" class="text-sm text-brown text-center"></p>
+        </div>
+        <div id="checklistItems" class="space-y-2">
+          <!-- Checklist items rendered by JS -->
+        </div>
+      </div>
+
+      <div id="noChecklist" class="text-center py-16">
+        <div class="text-6xl mb-4">🛒</div>
+        <p class="text-brown text-lg">Pilih resep untuk melihat daftar bahan</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================================== -->
+  <!-- MODAL: RECIPE FORM (Add / Edit)       -->
+  <!-- ===================================== -->
+  <div id="recipeModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="recipeModalTitle" class="font-display text-xl text-chocolate-dark">Tambah Resep</h3>
+        <button onclick="closeRecipeModal()" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="recipeForm" onsubmit="saveRecipe(event)">
+          <input type="hidden" id="recipeId" />
+
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Nama Kue *</label>
+              <input id="recipeName" type="text" class="input-field w-full" placeholder="Contoh: Brownies Cokelat" required />
+            </div>
+            <div>
+              <label class="form-label">Kategori *</label>
+              <select id="recipeCategory" class="input-field w-full" required>
+                <option value="">Pilih kategori</option>
+                <option value="Kue Kering">Kue Kering</option>
+                <option value="Kue Basah">Kue Basah</option>
+                <option value="Roti">Roti</option>
+                <option value="Cake">Cake</option>
+                <option value="Pastry">Pastry</option>
+                <option value="Dessert">Dessert</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Durasi (menit) *</label>
+              <input id="recipeDuration" type="number" min="1" class="input-field w-full" placeholder="60" required />
+            </div>
+            <div>
+              <label class="form-label">Jumlah Porsi *</label>
+              <input id="recipeServings" type="number" min="1" class="input-field w-full" placeholder="8" required />
+            </div>
+          </div>
+
+          <!-- Image URL -->
+          <div class="mb-4">
+            <label class="form-label">URL Gambar (opsional)</label>
+            <input id="recipeImage" type="url" class="input-field w-full" placeholder="https://..." />
+          </div>
+
+          <!-- Ingredients -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <label class="form-label mb-0">Bahan-Bahan *</label>
+              <button type="button" onclick="addIngredientRow()" class="text-brown text-sm font-semibold hover:text-chocolate-dark transition">+ Tambah Bahan</button>
+            </div>
+            <div id="ingredientsList" class="space-y-2">
+              <!-- Ingredient rows rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Steps -->
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+              <label class="form-label mb-0">Langkah Pembuatan *</label>
+              <button type="button" onclick="addStepRow()" class="text-brown text-sm font-semibold hover:text-chocolate-dark transition">+ Tambah Langkah</button>
+            </div>
+            <div id="stepsList" class="space-y-2">
+              <!-- Step rows rendered dynamically -->
+            </div>
+          </div>
+
+          <div class="flex gap-3 justify-end">
+            <button type="button" onclick="closeRecipeModal()" class="btn-outline">Batal</button>
+            <button type="submit" class="btn-primary">Simpan Resep</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================== -->
+  <!-- MODAL: RECIPE DETAIL (View)           -->
+  <!-- ===================================== -->
+  <div id="detailModal" class="modal-overlay hidden">
+    <div class="modal-box max-w-2xl">
+      <div class="modal-header">
+        <h3 id="detailTitle" class="font-display text-xl text-chocolate-dark"></h3>
+        <button onclick="closeDetailModal()" class="modal-close">✕</button>
+      </div>
+      <div id="detailBody" class="modal-body">
+        <!-- Detail content rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================== -->
+  <!-- MODAL: SCHEDULE FORM                  -->
+  <!-- ===================================== -->
+  <div id="scheduleModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="scheduleModalTitle" class="font-display text-xl text-chocolate-dark">Tambah Jadwal</h3>
+        <button onclick="closeScheduleModal()" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="scheduleForm" onsubmit="saveSchedule(event)">
+          <input type="hidden" id="scheduleId" />
+
+          <div class="mb-4">
+            <label class="form-label">Resep *</label>
+            <select id="scheduleRecipe" class="input-field w-full" required>
+              <option value="">Pilih resep</option>
+            </select>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Tanggal *</label>
+              <input id="scheduleDate" type="date" class="input-field w-full" required />
+            </div>
+            <div>
+              <label class="form-label">Waktu *</label>
+              <input id="scheduleTime" type="time" class="input-field w-full" required />
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Status</label>
+            <select id="scheduleStatus" class="input-field w-full">
+              <option value="upcoming">Mendatang</option>
+              <option value="inprogress">Berlangsung</option>
+              <option value="done">Selesai</option>
+            </select>
+          </div>
+          <div class="mb-6">
+            <label class="form-label">Catatan</label>
+            <textarea id="scheduleNote" rows="2" class="input-field w-full resize-none" placeholder="Catatan tambahan..."></textarea>
+          </div>
+
+          <div class="flex gap-3 justify-end">
+            <button type="button" onclick="closeScheduleModal()" class="btn-outline">Batal</button>
+            <button type="submit" class="btn-primary">Simpan Jadwal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================== -->
+  <!-- TOAST NOTIFICATION                    -->
+  <!-- ===================================== -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Script -->
+  <script src="script.js"></script>
+</body>
+</html>
